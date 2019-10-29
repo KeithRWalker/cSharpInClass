@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using BranchAndChicken.api.Models;
@@ -9,40 +10,71 @@ namespace BranchAndChicken.api.DataAccess
 {
     public class TrainerRepository
     {
-        private static List<Trainer> _trainers = new List<Trainer>
-        {
-            new Trainer()
-            {
-                Id = Guid.NewGuid(),
-                Name = "Martin",
-                Specialty = Specialty.TaeCluckDoe,
-                YearsOfExp = 0,
-            },
-            new Trainer()
-            {
-                Id = Guid.NewGuid(),
-                Name = "Nathan",
-                Specialty = Specialty.Chudo,
-                YearsOfExp = 12,
-            },
-            new Trainer()
-            {
-                Id = Guid.NewGuid(),
-                Name = "Adam",
-                Specialty = Specialty.ChravBacaw,
-                YearsOfExp = 3,
-            }
-        };
+        /*        private static List<Trainer> _trainers = new List<Trainer>
+                {
+                    new Trainer()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Martin",
+                        Specialty = Specialty.TaeCluckDoe,
+                        YearsOfExp = 0,
+                    },
+                    new Trainer()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Nathan",
+                        Specialty = Specialty.Chudo,
+                        YearsOfExp = 12,
+                    },
+                    new Trainer()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Adam",
+                        Specialty = Specialty.ChravBacaw,
+                        YearsOfExp = 3,
+                    }
+                };*/
+
+        private readonly List<Trainer> _trainers = new List<Trainer>();
+
+        private readonly string _connectionString = "Server=localhost;Database=BranchAndChicken;Trusted_Connection=True;";
 
         public List<Trainer> GetAll()
         {
-            return _trainers;
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = "SELECT * FROM Trainer";
+                var dataReader = cmd.ExecuteReader();
+                var trainers = new List<Trainer>();
+                while (dataReader.Read())
+                {
+                    /*  Explicit Cast   */
+                    var id = (Guid) dataReader["Id"];
+                    /*  Implicit Cast   */
+                    var name = dataReader["Name"] as string;
+                    /*  Convert To   */
+                    var yearsOfExperience = Convert.ToInt32(dataReader["YearsOfExperience"]);
+                    /*  Try Parse   */
+                    Enum.TryParse<Specialty>(dataReader["Specialty"].ToString(), out var specialty);
+                    var trainer = new Trainer
+                    {
+                        Specialty = specialty,
+                        Id = id,
+                        Name = name,
+                        YearsOfExp = yearsOfExperience
+                    };
+                    trainers.Add(trainer);
+                }
+                return trainers;
+            }
         }
 
         public Trainer Get(string name)
         {
-            var trainer = _trainers.First(t => t.Name == name);
-            return trainer;
+          var trainer = _trainers.First(t => t.Name == name);
+          return trainer;
         }
 
         public void Remove(string name)
@@ -51,10 +83,10 @@ namespace BranchAndChicken.api.DataAccess
             _trainers.Remove(trainer);
         }
 
-        public ActionResult<Trainer> GetSpecialty(string specialty)
+/*        public ActionResult<Trainer> GetSpecialty(string specialty)
         {
             throw new NotImplementedException();
-        }
+        }*/
 
         public Trainer Update(Trainer updatedTrainer, Guid id)
         {
