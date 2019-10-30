@@ -29,6 +29,12 @@ namespace BranchAndChicken.api.Controllers
             return repo.Get(name);
         }
 
+        [HttpGet("{id:int}")]
+        public ActionResult<Trainer> GetById(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         [HttpDelete("{name}")]
         public IActionResult DeleteTrainer(string name)
         {
